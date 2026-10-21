@@ -1,0 +1,3 @@
+#include "gameos/core/ConfigStore.hpp"
+#include <fstream>
+namespace gameos::core{bool ConfigStore::load(const std::string&p){std::ifstream i(p);if(!i)return false;values_.clear();std::string l;while(std::getline(i,l)){auto n=l.find('=');if(n!=std::string::npos)values_[l.substr(0,n)]=l.substr(n+1);}return true;}bool ConfigStore::save(const std::string&p)const{std::ofstream o(p);if(!o)return false;for(auto&[k,v]:values_)o<<k<<'='<<v<<'\n';return true;}void ConfigStore::set(std::string k,std::string v){values_[std::move(k)]=std::move(v);}std::string ConfigStore::get(const std::string&k,const std::string&f)const{auto i=values_.find(k);return i==values_.end()?f:i->second;}}
