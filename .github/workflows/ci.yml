@@ -30,7 +30,7 @@ jobs:
         run: python examples/run_demo.py
 
   cpp:
-    name: C++23 UI build and tests
+    name: C++23 desktop build and tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -41,5 +41,5 @@ jobs:
         run: cmake --build build --parallel
       - name: Test
         run: ctest --test-dir build --output-on-failure
-      - name: Run UI demo
-        run: ./build/game_consol_demo
+      - name: Run headless desktop smoke test
+        run: ./build/game_consol_demo --headless
