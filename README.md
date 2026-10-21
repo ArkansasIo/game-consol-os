@@ -1,49 +1,87 @@
 # Game Consol OS
 
-A modular, homebrew-friendly game console operating-system project. The repository now includes a **C++23 console UI framework** with an original horizontal media-bar/XMB-inspired interaction model, alongside the Python reference runtime.
+A modular, homebrew-friendly game console OS application framework. It now includes a **C++23 desktop application** that runs as a normal resizable window on Windows and macOS, plus the Python reference runtime and reusable OS/UI services.
 
-> Status: early scaffold. The project does not yet contain a bootable console OS image or physical-console hardware drivers.
+> Status: host desktop application / OS-shell prototype. This is not a bootable replacement kernel for Windows or macOS.
 
-## Goals
+## Desktop application
 
-- Define a deterministic kernel/runtime boundary for a game console.
-- Provide a controller-first C++23 UI API suitable for an AAA-style console shell.
-- Keep hardware-specific graphics code behind a renderer interface.
-- Provide input, frame timing, memory, logging, and storage abstractions.
-- Make the reference implementation testable on a developer workstation.
-- Document the path from host simulation to emulator or physical hardware.
+`GameConsolOS` runs **inside the host operating system** as a normal desktop application. It does not replace Windows or macOS. The same C++23 UI/runtime code is built for both platforms through CMake and SDL3.
 
-## C++23 UI prototype
+The desktop layer provides:
 
-The UI lives under `include/console_ui/` and `src/console_ui/`.
+- Native OS window creation through SDL3.
+- Hardware-accelerated SDL renderer selection.
+- High-DPI/resizable window support.
+- Keyboard navigation with arrow keys, Enter/Space, Escape, and Q.
+- Gamepad/D-pad/A-B style navigation through SDL3 gamepad input.
+- Desktop font loading with `GAMECONSOL_FONT` override.
+- XMB-inspired horizontal console shell.
+- Games / Media / Library / Store / Profile / Settings navigation.
+- Headless CI smoke-test mode with `--headless`.
 
-It provides:
+SDL3 is used as the portability layer so the application can share one C++ implementation across Windows and macOS; CMake supports generating native build systems and application bundles/installers across platforms. citeturn0search0turn0search1
 
-- `XmbShell` horizontal navigation and focus management.
-- `UiItem`, `UiTheme`, `UiTransform`, and screen descriptors.
-- Controller-oriented `InputRouter` semantic input.
-- `Animation` with linear, ease-out-cubic, and ease-in-out-cubic easing.
-- `IRenderer` abstraction for Vulkan, Direct3D, OpenGL, or a future console GPU backend.
-- `Application` that builds the initial Games / Media / Library / Store / Profile / Settings shell.
+## Windows
 
-The visual direction is **XMB-inspired**, not a reproduction of proprietary PlayStation source code, artwork, fonts, logos, or assets.
+Install Visual Studio 2022+ with C++ desktop development and CMake, then:
 
-See [`docs/AAA_UI.md`](docs/AAA_UI.md) for the architecture and planned AAA systems.
+```powershell
+cmake -S . -B build -A x64
+cmake --build build --config Release
+.\build\Release\game_consol_demo.exe
+```
 
-### Build C++23 UI
+For CI/headless validation:
 
-Requirements: CMake 3.24+ and a C++23 compiler.
+```powershell
+.\build\Release\game_consol_demo.exe --headless
+```
+
+## macOS
+
+Install Xcode Command Line Tools and CMake:
+
+```bash
+cmake -S . -B build -G Xcode -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+open build/Release/game_consol_demo.app
+```
+
+CMake supports the Xcode generator on Apple platforms and can generate macOS application bundles. citeturn0search8
+
+## C++23 framework
+
+The project contains reusable layers for:
+
+- `gameos::core::Kernel`
+- `gameos::core::EventBus`
+- `gameos::core::ProcessManager`
+- `gameos::core::VirtualFileSystem`
+- `gameos::core::Logger`
+- `gameos::core::ConfigStore`
+- `gameos::update::UpdateManager`
+- `gameos::gui::Scene`
+- `gameos::gui::Widget`
+- `gameos::gui::WindowManager`
+- `gameos::platform::DesktopApp`
+- `gameos::platform::DesktopRenderer`
+- `console::ui::XmbShell`
+
+See [`docs/FRAMEWORK.md`](docs/FRAMEWORK.md), [`docs/DESKTOP_APP.md`](docs/DESKTOP_APP.md), and [`docs/AAA_UI.md`](docs/AAA_UI.md).
+
+## Build and test
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
-./build/game_consol_demo
+./build/game_consol_demo --headless
 ```
 
-## Python reference prototype
+The build fetches SDL3 and SDL_ttf at configure time. The repository pins the SDL3 release used by the desktop build rather than depending on a locally installed copy.
 
-Requirements: Python 3.11+
+## Python reference prototype
 
 ```bash
 python -m unittest discover -s tests -v
@@ -53,28 +91,17 @@ python examples/run_demo.py
 ## Repository layout
 
 - `include/console_ui/` — public C++23 console UI API.
-- `src/console_ui/` — C++23 implementation.
-- `src/main.cpp` — host UI demonstration entry point.
-- `tests/cpp/` — C++ UI tests.
-- `docs/AAA_UI.md` — AAA/XMB-inspired UI design.
-- `docs/ARCHITECTURE.md` — subsystem boundaries and runtime model.
-- `docs/ROADMAP.md` — staged implementation plan.
-- `docs/SECURITY.md` — trust boundaries and safe development practices.
-- `src/console_os/` — Python host-side reference model.
-- `examples/` — Python demonstration.
+- `src/console_ui/` — C++23 shell implementation.
+- `include/gameos/` — OS, update, GUI, and desktop public APIs.
+- `src/gameos/` — OS services and desktop implementation.
+- `src/main.cpp` — desktop application entry point.
+- `tests/cpp/` — C++ tests.
+- `docs/` — architecture and implementation documentation.
 - `.github/workflows/ci.yml` — Python and C++ CI.
 
-## Design principles
+## Important distinction
 
-1. **Portability:** hardware access belongs in platform backends, not game-facing APIs.
-2. **Determinism:** frame timing, navigation, and input snapshots should be reproducible in tests.
-3. **Explicit ownership:** allocation and resource lifetimes must be documented.
-4. **Fail safely:** invalid configuration or unsupported devices should return errors, not silently corrupt state.
-5. **Incremental bring-up:** host model first, renderer backend next, emulator next, then target hardware.
-
-## Roadmap
-
-See [docs/ROADMAP.md](docs/ROADMAP.md). The next major milestone is a C++23 target-specific kernel/runtime skeleton plus a real GPU renderer backend.
+This project is an **OS-style shell/application environment**, not a kernel that boots instead of Windows or macOS. The desktop build runs on top of the host OS. A future dedicated-hardware target can reuse the core abstractions behind a different platform layer.
 
 ## License
 
