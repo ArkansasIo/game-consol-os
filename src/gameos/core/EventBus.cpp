@@ -1,0 +1,3 @@
+#include "gameos/core/EventBus.hpp"
+#include <algorithm>
+namespace gameos::core { std::size_t EventBus::subscribe(const std::string&t,Handler h){std::scoped_lock l(mutex_);auto n=nextToken_++;handlers_[t].push_back({n,std::move(h)});return n;} void EventBus::unsubscribe(const std::string&t,std::size_t n){std::scoped_lock l(mutex_);auto i=handlers_.find(t);if(i==handlers_.end())return;auto&v=i->second;v.erase(std::remove_if(v.begin(),v.end(),[&](auto&s){return s.token==n;}),v.end());} void EventBus::publish(const std::string&t,const std::string&p){std::vector<Handler>h;{std::scoped_lock l(mutex_);if(auto i=handlers_.find(t);i!=handlers_.end())for(auto&s:i->second)h.push_back(s.handler);}for(auto&f:h)f(p);} }
