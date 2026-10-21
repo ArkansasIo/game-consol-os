@@ -1,0 +1,11 @@
+[project]
+name = "game-consol-os"
+version = "0.1.0"
+description = "Portable reference model and architecture scaffold for a game console operating system"
+requires-python = ">=3.11"
+license = { text = "UNLICENSED" }
+authors = [{ name = "ArkansasIo contributors" }]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
