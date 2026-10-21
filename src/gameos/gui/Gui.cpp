@@ -1,0 +1,2 @@
+#include "gameos/gui/Gui.hpp"
+namespace gameos::gui{void Scene::add(std::shared_ptr<Widget>w){if(w)widgets_.push_back(std::move(w));}void Scene::update(double dt){for(auto&w:widgets_)if(w->visible())w->update(dt);}void Scene::draw(Canvas&c)const{for(auto&w:widgets_)if(w->visible())w->draw(c);}bool Scene::dispatch(Event e){for(auto i=widgets_.rbegin();i!=widgets_.rend();++i)if((*i)->visible()&&(*i)->handle(e))return true;return false;}}
