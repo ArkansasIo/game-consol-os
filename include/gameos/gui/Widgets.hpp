@@ -1,0 +1,4 @@
+#pragma once
+#include "gameos/gui/Gui.hpp"
+#include <functional>
+namespace gameos::gui{class Label:public Widget{public:explicit Label(std::string t={}):text_(std::move(t)){}void setText(std::string t){text_=std::move(t);}void update(double)override{}void draw(Canvas&c)const override{c.text({bounds().x,bounds().y},text_,{1,1,1,1},24);}bool handle(Event&)override{return false;}private:std::string text_;};class Button:public Widget{public:using Callback=std::function<void()>;explicit Button(std::string t={}):text_(std::move(t)){}void update(double)override{}void draw(Canvas&c)const override{auto r=bounds();c.panel(r,{.04f,.08f,.14f,1},16);c.text({r.x+18,r.y+r.h*.62f},text_,{1,1,1,1},24);}bool handle(Event&e)override{if(e.type==EventType::Activate||e.type==EventType::PointerUp){if(callback_)callback_();e.handled=true;return true;}return false;}void onActivate(Callback cb){callback_=std::move(cb);}private:std::string text_;Callback callback_;};}
