@@ -1,2 +1,47 @@
 #include "gameos/core/ProcessManager.hpp"
-namespace gameos::core{void ProcessManager::tick(const TickContext&){if(!running_)return;for(auto&[id,p]:processes_)if(p.state==ProcessState::Running&&p.entry){p.exitCode=p.entry();p.state=ProcessState::Stopped;}}ProcessId ProcessManager::spawn(std::string n,std::function<int()>e){auto id=nextId_++;processes_.emplace(id,Process{id,std::move(n),ProcessState::Running,std::move(e),0});return id;}bool ProcessManager::suspend(ProcessId id){auto i=processes_.find(id);if(i==processes_.end()||i->second.state!=ProcessState::Running)return false;i->second.state=ProcessState::Suspended;return true;}bool ProcessManager::resume(ProcessId id){auto i=processes_.find(id);if(i==processes_.end()||i->second.state!=ProcessState::Suspended)return false;i->second.state=ProcessState::Running;return true;}bool ProcessManager::terminate(ProcessId id,int c){auto i=processes_.find(id);if(i==processes_.end())return false;i->second.exitCode=c;i->second.state=ProcessState::Stopped;return true;}const Process*ProcessManager::find(ProcessId id)const{auto i=processes_.find(id);return i==processes_.end()?nullptr:&i->second;}}
+namespace gameos::core {
+
+void ProcessManager::tick(const TickContext&) {
+    if (!running_) return;
+    for (auto& [id, process] : processes_) {
+        if (process.state == ProcessState::Running && process.entry) {
+            process.exitCode = process.entry();
+            process.state = ProcessState::Stopped;
+        }
+    }
+}
+
+ProcessId ProcessManager::spawn(std::string name, std::function<int()> entry) {
+    auto id = nextId_++;
+    processes_.emplace(id, Process{id, std::move(name), ProcessState::Running, std::move(entry), 0});
+    return id;
+}
+
+bool ProcessManager::suspend(ProcessId id) {
+    auto found = processes_.find(id);
+    if (found == processes_.end() || found->second.state != ProcessState::Running) return false;
+    found->second.state = ProcessState::Suspended;
+    return true;
+}
+
+bool ProcessManager::resume(ProcessId id) {
+    auto found = processes_.find(id);
+    if (found == processes_.end() || found->second.state != ProcessState::Suspended) return false;
+    found->second.state = ProcessState::Running;
+    return true;
+}
+
+bool ProcessManager::terminate(ProcessId id, int code) {
+    auto found = processes_.find(id);
+    if (found == processes_.end()) return false;
+    found->second.exitCode = code;
+    found->second.state = ProcessState::Stopped;
+    return true;
+}
+
+const Process* ProcessManager::find(ProcessId id) const {
+    auto found = processes_.find(id);
+    return found == processes_.end() ? nullptr : &found->second;
+}
+
+} // namespace gameos::core

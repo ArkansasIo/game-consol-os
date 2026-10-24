@@ -11,6 +11,7 @@ set(SDLTTF_SAMPLES OFF CACHE BOOL "Disable SDL_ttf samples" FORCE)
 FetchContent_Declare(SDL3 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git GIT_TAG release-3.4.18 GIT_SHALLOW TRUE)
 FetchContent_Declare(SDL3_ttf GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf.git GIT_TAG release-3.2.2 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(SDL3 SDL3_ttf)
+set(BUILD_SHARED_LIBS OFF)
 add_library(console_ui src/console_ui/Application.cpp src/console_ui/Animation.cpp src/console_ui/Input.cpp src/console_ui/Renderer.cpp src/console_ui/Theme.cpp src/console_ui/XmbShell.cpp)
 target_include_directories(console_ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(console_ui PUBLIC cxx_std_23)
@@ -54,9 +55,19 @@ else()
 endif()
 add_executable(game_consol_demo src/main.cpp)
 target_link_libraries(game_consol_demo PRIVATE gameos_desktop)
-if(WIN32)
-    set_target_properties(game_consol_demo PROPERTIES WIN32_EXECUTABLE TRUE)
-elseif(APPLE)
+if(WIN32 AND TARGET SDL3::SDL3)
+    add_custom_command(TARGET game_consol_demo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:game_consol_demo>
+        COMMAND_EXPAND_LISTS)
+endif()
+if(WIN32 AND TARGET SDL3_ttf::SDL3_ttf)
+    add_custom_command(TARGET game_consol_demo POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:SDL3_ttf::SDL3_ttf> $<TARGET_FILE_DIR:game_consol_demo>
+        COMMAND_EXPAND_LISTS)
+endif()
+if(APPLE)
     set_target_properties(game_consol_demo PROPERTIES MACOSX_BUNDLE TRUE MACOSX_BUNDLE_GUI_IDENTIFIER "com.arkansasio.gameconsolos" MACOSX_BUNDLE_BUNDLE_NAME "GameConsolOS")
 endif()
 enable_testing()
